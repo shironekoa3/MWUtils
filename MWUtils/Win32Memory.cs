@@ -32,7 +32,9 @@ namespace MWUtils
         public static bool DumpModule(int pid, string moduleName, string path)
         {
             if (pid <= 0)
+            {
                 return false;
+            }
 
             Process p = Process.GetProcessById(pid);
             for (int i = 0; i < p.Modules.Count; i++)
@@ -68,7 +70,9 @@ namespace MWUtils
         public static long GetModuleAddr(int pid, string moduleName)
         {
             if (pid <= 0)
+            {
                 return 0;
+            }
 
             Process p = Process.GetProcessById(pid);
             for (int i = 0; i < p.Modules.Count; i++)
@@ -88,7 +92,11 @@ namespace MWUtils
         /// <returns></returns>
         public static byte ReadByte(int pid, long baseAddr)
         {
-            if (pid <= 0) return 0;
+            if (pid <= 0)
+            {
+                return 0;
+            }
+
             try
             {
                 byte[] buffer = new byte[4];
@@ -116,7 +124,11 @@ namespace MWUtils
         /// <returns></returns>
         public static int ReadInt32(int pid, long baseAddr)
         {
-            if (pid <= 0) return 0;
+            if (pid <= 0)
+            {
+                return 0;
+            }
+
             try
             {
                 byte[] buffer = new byte[4];
@@ -139,7 +151,11 @@ namespace MWUtils
         /// <returns></returns>
         public static long ReadInt64(int pid, long baseAddr)
         {
-            if (pid <= 0) return 0;
+            if (pid <= 0)
+            {
+                return 0;
+            }
+
             try
             {
                 byte[] buffer = new byte[8];
@@ -164,7 +180,11 @@ namespace MWUtils
         public static byte[] ReadBytes(int pid, long baseAddr, int length)
         {
             byte[] buffer = new byte[length];
-            if (pid <= 0) return buffer;
+            if (pid <= 0)
+            {
+                return buffer;
+            }
+
             try
             {
                 IntPtr byteAddress = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
@@ -174,6 +194,60 @@ namespace MWUtils
             }
             catch { }
             return buffer;
+        }
+
+        /// <summary>
+        /// 读内存浮点数
+        /// </summary>
+        /// <param name="baseAddr"></param>
+        /// <returns></returns>
+        public static float ReadFloat(int pid, long baseAddr)
+        {
+            if (pid <= 0)
+            {
+                return 0;
+            }
+
+            try
+            {
+                byte[] buffer = new byte[4];
+                IntPtr byteAddress = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
+                IntPtr hProcess = OpenProcess(0x1F0FFF, false, pid);
+                ReadProcessMemory(hProcess, (IntPtr)baseAddr, byteAddress, 4, IntPtr.Zero);
+                CloseHandle(hProcess);
+                return BitConverter.ToSingle(buffer, 0);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 读内存双浮点数
+        /// </summary>
+        /// <param name="baseAddr"></param>
+        /// <returns></returns>
+        public static double ReadDouble(int pid, long baseAddr)
+        {
+            if (pid <= 0)
+            {
+                return 0;
+            }
+
+            try
+            {
+                byte[] buffer = new byte[8];
+                IntPtr byteAddress = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
+                IntPtr hProcess = OpenProcess(0x1F0FFF, false, pid);
+                ReadProcessMemory(hProcess, (IntPtr)baseAddr, byteAddress, 8, IntPtr.Zero);
+                CloseHandle(hProcess);
+                return BitConverter.ToDouble(buffer, 0);
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
 
@@ -289,6 +363,62 @@ namespace MWUtils
         }
 
         /// <summary>
+        /// 写内存 4 字节
+        /// </summary>
+        /// <param name="baseAddr"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool WriteFloat(int pid, long baseAddr, float value)
+        {
+            if (pid <= 0)
+                return false;
+
+            bool flag = false;
+
+            byte[] bytes = BitConverter.GetBytes(value);
+            // 固定数组，防止垃圾回收器移动它
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                IntPtr pValue = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
+                IntPtr hProcess = OpenProcess(0x1F0FFF, false, pid);
+                flag = WriteProcessMemory(hProcess, (IntPtr)baseAddr, pValue, 4, IntPtr.Zero);
+                CloseHandle(hProcess);
+            }
+            catch { }
+            finally { handle.Free(); }
+            return flag;
+        }
+
+        /// <summary>
+        /// 写内存 8 字节
+        /// </summary>
+        /// <param name="baseAddr"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool WriteDouble(int pid, long baseAddr, double value)
+        {
+            if (pid <= 0)
+                return false;
+
+            bool flag = false;
+
+            byte[] bytes = BitConverter.GetBytes(value);
+            // 固定数组，防止垃圾回收器移动它
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                IntPtr pValue = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
+                IntPtr hProcess = OpenProcess(0x1F0FFF, false, pid);
+                flag = WriteProcessMemory(hProcess, (IntPtr)baseAddr, pValue, 8, IntPtr.Zero);
+                CloseHandle(hProcess);
+            }
+            catch { }
+            finally { handle.Free(); }
+            return flag;
+        }
+
+        /// <summary>
         /// 修改指定地址和大小的内存页属性
         /// </summary>
         /// <param name="baseAddr"></param>
@@ -319,7 +449,6 @@ namespace MWUtils
         {
             return BitConverter.GetBytes(value);
         }
-
 
         /// <summary>
         /// 长整数转字节数组
