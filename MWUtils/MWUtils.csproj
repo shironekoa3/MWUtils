@@ -73,6 +73,7 @@
     <Compile Include="Win32Input.cs" />
     <Compile Include="Win32Memory.cs" />
     <Compile Include="Win32Other.cs" />
+    <Compile Include="WindowsToolsHotKey.cs" />
     <Compile Include="WindowsTools.cs" />
   </ItemGroup>
   <ItemGroup>

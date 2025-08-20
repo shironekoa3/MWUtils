@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace MWUtils
@@ -104,17 +105,44 @@ namespace MWUtils
 
         [DllImport("User32.dll", EntryPoint = "FindWindow")]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+
+        /// <summary>
+        /// 会截取到阴影部分，，需要使用 GetClientRect + ClientToScreen
+        /// </summary>
+        /// <param name="hwnd"></param>
+        /// <param name="lpRect"></param>
+        /// <returns></returns>
         [DllImport("user32.dll")]
         public static extern int GetWindowRect(IntPtr hwnd, ref RECT lpRect);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
         public struct RECT
         {
             public int Left;
             public int Top;
             public int Right;
             public int Bottom;
+
+            public int Width => Right - Left;
+            public int Height => Bottom - Top;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
         }
 
-       
+
+
 
         public static readonly int VK_LSHIFT = 0xA0;
         public static readonly int VK_RSHIFT = 0xA1;
